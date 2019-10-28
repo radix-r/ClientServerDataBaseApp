@@ -11,6 +11,7 @@ import javax.swing.table.AbstractTableModel;
 import java.util.Properties;
 import javax.sql.DataSource;
 import com.mysql.cj.jdbc.MysqlDataSource;
+import com.mysql.cj.jdbc.exceptions.CommunicationsException;
 
 
 // ResultSet rows and columns are counted from 1 and JTable 
@@ -32,20 +33,22 @@ public class ResultSetTableModel extends AbstractTableModel
    
    // constructor initializes resultSet and obtains its meta data object;
    // determines number of rows
-   public ResultSetTableModel( String query ) 
+   public ResultSetTableModel( String query, String url, String driver, String username, char[] password ) 
       throws SQLException, ClassNotFoundException
    {         
-	   Properties properties = new Properties();
-	   FileInputStream filein = null;
+	   Class.forName(driver);
+	   //Properties properties = new Properties();
+	   //FileInputStream filein = null;
 	   MysqlDataSource dataSource = null;
        //read properties file
-	   try {
-	    	filein = new FileInputStream("db.properties");
-	    	properties.load(filein);
+	   //try {
+	    	//filein = new FileInputStream("db.properties");
+	    	// properties.load(filein);
 	    	dataSource = new MysqlDataSource();
-	    	dataSource.setURL(properties.getProperty("MYSQL_DB_URL"));
-	    	dataSource.setUser(properties.getProperty("MYSQL_DB_USERNAME"));
-	    	dataSource.setPassword(properties.getProperty("MYSQL_DB_PASSWORD")); 	
+	    	dataSource.setURL(url);
+	    	dataSource.setUser(username);
+	    	dataSource.setPassword(new String(password)); 
+	    	
 	    
             // connect to database bikes and query database
   	        // establish connection to database
@@ -62,15 +65,15 @@ public class ResultSetTableModel extends AbstractTableModel
 		
 		    //set update and execute it
 		    //setUpdate (query);
-	  } //end try
-      catch ( SQLException sqlException ) 
+	  //} //end try
+      /*catch ( SQLException sqlException ) 
       {
          sqlException.printStackTrace();
          System.exit( 1 );
-      } // end catch
-      catch (IOException e) {
-   	     e.printStackTrace();
-      }  
+      } 
+      */
+	   
+      
    } // end constructor ResultSetTableModel
 
    // get class that represents column type
