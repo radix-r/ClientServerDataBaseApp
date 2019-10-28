@@ -246,8 +246,7 @@ public class GUI extends JFrame {
          
          
 
-         // create JTable delegate for tableModel 
-         resultsTable = new JTable( tableModel );
+         
          
          
          // create event listener for submitButton
@@ -284,15 +283,17 @@ public class GUI extends JFrame {
 						   "Database error", JOptionPane.ERROR_MESSAGE );
 						  
 						// ensure database connection is closed
-						//tableModel.disconnectFromDatabase();
-	                    
+						// tableModel.disconnectFromDatabase();
+	                    return;
 	                    //System.exit( 1 );   // terminate application
 	                 } // end catch
 	               	
                   // perform a new query
                   try 
                   {
+                	  
                      tableModel.setQuery( sqlCommand.getText() );
+                     System.out.println("Cmd submit");
                   } // end try
                   catch ( SQLException sqlException ) 
                   {
@@ -319,8 +320,12 @@ public class GUI extends JFrame {
                         System.exit( 1 ); // terminate application
                      } // end inner catch                   
                   } // end outer catch
+                  // create JTable delegate for tableModel
+                  System.out.println("table update");
+                  resultsTable.setModel(tableModel );
+                  //add(resultsTable);
                } // end actionPerformed
-            }  // end ActionListener inner class          
+            }  // end ActionListener inner class         
          ); // end call to addActionListener
 
          setSize( 798, 720 ); // set window size
