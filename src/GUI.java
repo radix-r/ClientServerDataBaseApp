@@ -5,17 +5,31 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import java.awt.Color;
 import javax.swing.JTextPane;
+import javax.swing.ScrollPaneConstants;
+
 import java.awt.Font;
 import java.awt.Panel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.sql.SQLException;
+
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+
 import java.awt.Button;
+
+import javax.swing.Box;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.border.LineBorder;
 import javax.swing.JButton;
 
@@ -25,6 +39,12 @@ public class GUI extends JFrame {
 	private JTextField usernameField;
 	private JPasswordField passwordField;
 	private JTable resultsTable;
+	private JComboBox jdbcComboBox;
+	private JTextPane sqlCommand;
+	private JComboBox databaseComboBox;
+	private Button connectButton;
+	private Button clearSQLButton;
+	private JButton clearResultButton;
 
 	/**
 	 * Launch the application.
@@ -70,7 +90,7 @@ public class GUI extends JFrame {
 		lblNewLabel.setBounds(420, 0, 327, 31);
 		contentPane.add(lblNewLabel);
 		
-		JTextPane sqlCommand = new JTextPane();
+		sqlCommand = new JTextPane();
 		sqlCommand.setBounds(420, 26, 327, 158);
 		contentPane.add(sqlCommand);
 		
@@ -85,7 +105,7 @@ public class GUI extends JFrame {
 		lblJdbcDriver.setFont(new Font("FreeSans", Font.BOLD, 14));
 		lblJdbcDriver.setBackground(Color.DARK_GRAY);
 		
-		JComboBox jdbcComboBox = new JComboBox();
+		jdbcComboBox = new JComboBox();
 		jdbcComboBox.setModel(new DefaultComboBoxModel(new String[] {"com.mysql.cj.jdbc.Driver"}));
 		jdbcComboBox.setBounds(99, 34, 309, 30);
 		contentPane.add(jdbcComboBox);
@@ -103,7 +123,7 @@ public class GUI extends JFrame {
 		lblDatabase.setFont(new Font("FreeSans", Font.BOLD, 14));
 		lblDatabase.setBackground(Color.DARK_GRAY);
 		
-		JComboBox databaseComboBox = new JComboBox();
+		databaseComboBox = new JComboBox();
 		databaseComboBox.setModel(new DefaultComboBoxModel(new String[] {"jdbc:mysql://localhost:3312/project3"}));
 		databaseComboBox.setBounds(99, 74, 309, 30);
 		contentPane.add(databaseComboBox);
@@ -152,14 +172,14 @@ public class GUI extends JFrame {
 		statusLabel.setForeground(Color.RED);
 		statusPanel.add(statusLabel);
 		
-		Button connectButton = new Button("Connect to Database");
+		connectButton = new Button("Connect to Database");
 		connectButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		connectButton.setForeground(Color.YELLOW);
 		connectButton.setBackground(Color.BLUE);
 		connectButton.setBounds(240, 204, 165, 24);
 		contentPane.add(connectButton);
 		
-		Button clearSQLButton = new Button("Clear SQL Command");
+		clearSQLButton = new Button("Clear SQL Command");
 		clearSQLButton.setFont(new Font("Dialog", Font.BOLD, 12));
 		clearSQLButton.setActionCommand("Clear SQL Command");
 		clearSQLButton.setBounds(411, 205, 165, 24);
@@ -188,10 +208,135 @@ public class GUI extends JFrame {
 		resultsTable.setBounds(10, 260, 735, 380);
 		contentPane.add(resultsTable);
 		
-		JButton btnClearResultWindow = new JButton("Clear Result Window");
-		btnClearResultWindow.setForeground(Color.BLACK);
-		btnClearResultWindow.setBackground(Color.YELLOW);
-		btnClearResultWindow.setBounds(10, 645, 202, 25);
-		contentPane.add(btnClearResultWindow);
+		clearResultButton = new JButton("Clear Result Window");
+		clearResultButton.setForeground(Color.BLACK);
+		clearResultButton.setBackground(Color.YELLOW);
+		clearResultButton.setBounds(10, 645, 202, 25);
+		contentPane.add(clearResultButton);
 	}
+
+
+	// create ResultSetTableModel and GUI
+   public void displayQueryResults() 
+   {   
+      super( "Displaying Query Results" );
+        
+      // create ResultSetTableModel and display database table
+      try 
+      {
+         // create TableModel for results of query SELECT * FROM bikes
+         tableModel = new ResultSetTableModel( DEFAULT_QUERY );
+
+         // set up JTextArea in which user types queries
+		//	queryArea = new JTextArea( 3, 100);
+         queryArea = new JTextArea( DEFAULT_QUERY, 3, 100 );
+         queryArea.setWrapStyleWord( true );
+         queryArea.setLineWrap( true );
+         
+         JScrollPane scrollPane = new JScrollPane( queryArea,
+            ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, 
+            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER );
+         
+         // set up JButton for submitting queries
+         JButton submitButton = new JButton( "Submit Query" );
+         submitButton.setBackground(Color.BLUE);
+         submitButton.setForeground(Color.YELLOW);
+ 
+         
+         // create Box to manage placement of queryArea and 
+         // submitButton in GUI
+         Box box = Box.createHorizontalBox();
+         box.add( scrollPane );
+         box.add( submitButton );
+
+         // create JTable delegate for tableModel 
+         JTable resultTable = new JTable( tableModel );
+         
+         // place GUI components on content pane
+         add( box, BorderLayout.NORTH );
+         add( new JScrollPane( resultTable ), BorderLayout.CENTER );
+
+         // create event listener for submitButton
+         submitButton.addActionListener( 
+         
+            new ActionListener() 
+            {
+               // pass query to table model
+               public void actionPerformed( ActionEvent event )
+               {
+                  // perform a new query
+                  try 
+                  {
+                     tableModel.setQuery( queryArea.getText() );
+                  } // end try
+                  catch ( SQLException sqlException ) 
+                  {
+                     JOptionPane.showMessageDialog( null, 
+                        sqlException.getMessage(), "Database error", 
+                        JOptionPane.ERROR_MESSAGE );
+                     
+                     // try to recover from invalid user query 
+                     // by executing default query
+                     try 
+                     {
+                        tableModel.setQuery( DEFAULT_QUERY );
+                        queryArea.setText( DEFAULT_QUERY );
+                     } // end try
+                     catch ( SQLException sqlException2 ) 
+                     {
+                        JOptionPane.showMessageDialog( null, 
+                           sqlException2.getMessage(), "Database error", 
+                           JOptionPane.ERROR_MESSAGE );
+         
+                        // ensure database connection is closed
+                        tableModel.disconnectFromDatabase();
+         
+                        System.exit( 1 ); // terminate application
+                     } // end inner catch                   
+                  } // end outer catch
+               } // end actionPerformed
+            }  // end ActionListener inner class          
+         ); // end call to addActionListener
+
+         setSize( 600, 300 ); // set window size
+         setVisible( true ); // display window  
+      } // end try
+      catch ( ClassNotFoundException classNotFound ) 
+      {
+         JOptionPane.showMessageDialog( null, 
+            "MySQL driver not found", "Driver not found",
+            JOptionPane.ERROR_MESSAGE );
+         
+         System.exit( 1 ); // terminate application
+      } // end catch
+      catch ( SQLException sqlException ) 
+      {
+         JOptionPane.showMessageDialog( null, sqlException.getMessage(), 
+            "Database error", JOptionPane.ERROR_MESSAGE );
+               
+         // ensure database connection is closed
+         tableModel.disconnectFromDatabase();
+         
+         System.exit( 1 );   // terminate application
+      } // end catch
+      
+      // dispose of window when user quits application (this overrides
+      // the default of HIDE_ON_CLOSE)
+      setDefaultCloseOperation( DISPOSE_ON_CLOSE );
+      
+      // ensure database connection is closed when user quits application
+      addWindowListener(new WindowAdapter() 
+         {
+            // disconnect from database and exit when window has closed
+            public void windowClosed( WindowEvent event )
+            {
+               tableModel.disconnectFromDatabase();
+               System.exit( 0 );
+            } // end method windowClosed
+         } // end WindowAdapter inner class
+      ); // end call to addWindowListener
+   } // end DisplayQueryResults constructor
+   
+
+
 }
