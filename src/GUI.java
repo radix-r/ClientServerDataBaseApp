@@ -46,7 +46,7 @@ public class GUI extends JFrame {
 	private JButton clearResultButton;
 	private JButton clearSQLButton;
 	private Button executeSQLButton;
-	static final String DEFAULT_QUERY = "SELECT * FROM bikes";
+	//static final String DEFAULT_QUERY = "SELECT * FROM bikes";
 	private ResultSetTableModel tableModel;
 
 	
@@ -267,7 +267,7 @@ public class GUI extends JFrame {
 	                {
 	               		//System.out.println("try connect");
 	               		//System.out.printf("%s \n%s \n%s \n%s \n", username,new String(password),jdbc,database);
-	               		tableModel = new ResultSetTableModel( DEFAULT_QUERY,database,jdbc, username, password );
+	               		tableModel = new ResultSetTableModel( sqlCommand.getText(),database,jdbc, username, password );
 	                }catch ( ClassNotFoundException classNotFound ) 
 	                {
 	                    JOptionPane.showMessageDialog( null, 
@@ -288,42 +288,10 @@ public class GUI extends JFrame {
 	                    //System.exit( 1 );   // terminate application
 	                 } // end catch
 	               	
-                  // perform a new query
-                  try 
-                  {
-                	  
-                     tableModel.setQuery( sqlCommand.getText() );
-                     System.out.println("Cmd submit");
-                  } // end try
-                  catch ( SQLException sqlException ) 
-                  {
-                     JOptionPane.showMessageDialog( null, 
-                        sqlException.getMessage(), "Database error", 
-                        JOptionPane.ERROR_MESSAGE );
-                     
-                     // try to recover from invalid user query 
-                     // by executing default query
-                     try 
-                     {
-                        tableModel.setQuery( DEFAULT_QUERY );
-                        sqlCommand.setText( DEFAULT_QUERY );
-                     } // end try
-                     catch ( SQLException sqlException2 ) 
-                     {
-                        JOptionPane.showMessageDialog( null, 
-                           sqlException2.getMessage(), "Database error", 
-                           JOptionPane.ERROR_MESSAGE );
-         
-                        // ensure database connection is closed
-                        tableModel.disconnectFromDatabase();
-         
-                        System.exit( 1 ); // terminate application
-                     } // end inner catch                   
-                  } // end outer catch
+                  
                   // create JTable delegate for tableModel
                   System.out.println("table update");
                   resultsTable.setModel(tableModel );
-                  //add(resultsTable);
                } // end actionPerformed
             }  // end ActionListener inner class         
          ); // end call to addActionListener

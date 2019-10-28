@@ -60,11 +60,15 @@ public class ResultSetTableModel extends AbstractTableModel
             // update database connection status
             connectedToDatabase = true;
 
-            // set query and execute it
-            setQuery( query );
-		
-		    //set update and execute it
-		    //setUpdate (query);
+            String[] tokens = query.split(" ");
+            if (tokens[0].toLowerCase().compareTo("select") == 0) {
+	            // if select set query and execute it
+	            setQuery(query);
+            }
+            else {
+			    // if not select set update and execute it
+			    setUpdate(query);
+            }
 	  //} //end try
       /*catch ( SQLException sqlException ) 
       {
@@ -206,13 +210,13 @@ public class ResultSetTableModel extends AbstractTableModel
 
       // specify query and execute it
       res = statement.executeUpdate( query );
-/*
+
       // obtain meta data for ResultSet
       metaData = resultSet.getMetaData();
       // determine number of rows in ResultSet
       resultSet.last();                   // move to last row
       numberOfRows = resultSet.getRow();  // get row number      
-*/    
+   
       // notify JTable that model has changed
       fireTableStructureChanged();
    } // end method setUpdate
